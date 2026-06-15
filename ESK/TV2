@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
+
+x = np.array([0.0, 0.60, 1.22, 1.81, 2.41, 3.00, 3.61, 4.20, 4.80, 5.40, 5.99])
+y = np.array([0.0, 2.03, 4.04, 6.03, 8.01, 10.01, 11.91, 13.83, 15.83, 17.79, 19.75])
+
+fit_liniendicke = 1.0
+fehler_liniendicke = 1.0
+
+# Optimale Ursprungsgerade: 
+m = np.sum(x * y) / np.sum(x**2)
+y_fit_punkte = m * x
+residuen = y - y_fit_punkte
+
+# Fehlergerade
+maske = x > 0
+abweichung_steigung = np.abs(residuen[maske] / x[maske])
+anzahl_punkte = len(abweichung_steigung)
+anzahl_innerhalb = int(np.ceil(2/3 * anzahl_punkte))
+delta_m = np.sort(abweichung_steigung)[anzahl_innerhalb - 1]
+m_min = m - delta_m
+m_max = m + delta_m
+
+x_fit = np.linspace(0, max(x), 100)
+y_opt = m * x_fit
+y_min = m_min * x_fit
+y_max = m_max * x_fit
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.scatter(x, y, color="black", marker="x", s=45, label="Messwerte")
+
+ax.plot(
+    x_fit,
+    y_opt,
+    color="red",
+    linewidth=fit_liniendicke,
+    label=f"Optimale Ursprungsgerade: m = {m:.3f}"
+)
+
+ax.plot(
+    x_fit,
+    y_min,
+    color="blue",
+    linestyle="--",
+    linewidth=fehler_liniendicke,
+    label=f"Untere Fehlergerade: m_min = {m_min:.3f}"
+)
+
+ax.plot(
+    x_fit,
+    y_max,
+    color="green",
+    linestyle="--",
+    linewidth=fehler_liniendicke,
+    label=f"Obere Fehlergerade: m_max = {m_max:.3f}"
+)
+
+ax.set_title("Lineare Beziehung zwischen Spannung und Stromstaerke", fontsize=14)
+ax.set_xlabel("I / mA", fontsize=12)
+ax.set_ylabel("U / V", fontsize=12)
+ax.set_xlim(0, 6.2)
+ax.set_ylim(0, 20.2)
+ax.xaxis.set_major_locator(MultipleLocator(0.5))
+ax.yaxis.set_major_locator(MultipleLocator(2))
+ax.tick_params(axis="both", labelsize=11)
+ax.grid(True, linestyle="--", linewidth=0.7, alpha=0.6)
+ax.legend(fontsize=9, loc="best", frameon=True)
+
+plt.show()
