@@ -31,8 +31,9 @@ else:
     gleichung_opt = f"y = {m:.1f}x - {abs(t):.3f}"
 
 # Wert bei 25 °C berechnen
-T_25 = 25 + 273.15
+T_25 = 298.15
 x_25 = 1 / T_25
+
 ln_R_25 = m * x_25 + b
 R_25 = np.exp(ln_R_25)
 
@@ -94,6 +95,16 @@ delta_m = (m_max - m_min) / 2
 # y-Werte der Grenzgeraden
 y_min = m_min * x_fit + b_min
 y_max = m_max * x_fit + b_max
+
+# Werte der Grenzgeraden bei 25 °C
+ln_R_25_grenz1 = m_min * x_25 + b_min
+ln_R_25_grenz2 = m_max * x_25 + b_max
+
+ln_R_25_min = min(ln_R_25_grenz1, ln_R_25_grenz2)
+ln_R_25_max = max(ln_R_25_grenz1, ln_R_25_grenz2)
+
+R_25_min = np.exp(ln_R_25_min)
+R_25_max = np.exp(ln_R_25_max)
 
 # Kontrolle: Wie viele Punkte im Fehlerstreifen liegen
 w_punkte = w_links + (w_rechts - w_links) * (x - x_links) / (x_rechts - x_links)
@@ -175,7 +186,7 @@ ax.annotate(
 ax.scatter(
     x_25,
     ln_R_25,
-    color="green",
+    color="orange",
     marker="o",
     s=35,
     label="Wert bei 25 °C"
@@ -187,6 +198,69 @@ ax.annotate(
     xytext=(8, -12),
     textcoords="offset points",
     fontsize=9,
+    color="orange"
+)
+
+# Vertikale gestrichelte Linie bei 25 °C
+ax.axvline(
+    x=x_25,
+    color="orange",
+    linestyle="--",
+    linewidth=0.4
+)
+
+# Horizontale gestrichelte Linien für unteren und oberen Wert bei 25 °C
+ax.hlines(
+    ln_R_25_min,
+    xmin=min(x),
+    xmax=x_25,
+    color="blue",
+    linestyle="--",
+    linewidth=0.4
+)
+
+ax.hlines(
+    ln_R_25_max,
+    xmin=min(x),
+    xmax=x_25,
+    color="green",
+    linestyle="--",
+    linewidth=0.4
+)
+
+# Markierung der Schnittpunkte mit den Grenzgeraden
+ax.scatter(
+    x_25,
+    ln_R_25_min,
+    color="blue",
+    marker="o",
+    s=25
+)
+
+ax.scatter(
+    x_25,
+    ln_R_25_max,
+    color="green",
+    marker="o",
+    s=25
+)
+
+# Beschriftung der unteren und oberen Werte
+ax.annotate(
+    rf"$\ln(R)_{{\min}} = {ln_R_25_min:.4f}$",
+    xy=(min(x), ln_R_25_min),
+    xytext=(5, -14),
+    textcoords="offset points",
+    fontsize=9,
+    color="blue"
+)
+
+ax.annotate(
+    rf"$\ln(R)_{{\max}} = {ln_R_25_max:.4f}$",
+    xy=(min(x), ln_R_25_max),
+    xytext=(5, 6),
+    textcoords="offset points",
+    fontsize=9,
     color="green"
 )
 
@@ -196,8 +270,8 @@ ax.set_xlabel(r"1/T [1/K]", fontsize=12)
 ax.set_ylabel(r"$\ln(R(T)) \ [\ln(\mathrm{k}\Omega)]$", fontsize=12)
 
 # Achsengrenzen
-ax.set_xlim(min(x)-0.0000, max(x) + 0.00001)
-ax.set_ylim(min(y)-0.1, max(y) + 0.2)
+ax.set_xlim(min(x) - 0.0000, max(x) + 0.00001)
+ax.set_ylim(min(y) - 0.1, max(y) + 0.2)
 
 # Skalierung
 ax.xaxis.set_major_locator(MultipleLocator(0.0001))
@@ -205,12 +279,12 @@ ax.yaxis.set_major_locator(MultipleLocator(0.5))
 
 ax.tick_params(axis="both", labelsize=11)
 ax.grid(True, linestyle="", linewidth=0.7, alpha=0.6)
-ax.legend(fontsize=9, loc="best", frameon=True)
+
+# Legende rechts unten
+ax.legend(fontsize=9, loc="lower right", frameon=True)
 
 plt.show()
 
+# Ergebnisse ausgeben
 print("Wert bei 25 °C:")
-print(f"T = {T_25:.2f} K")
-print(f"1/T = {x_25:.6f} 1/K")
 print(f"ln(R(25 °C)) = {ln_R_25:.4f}")
-print(f"R(25 °C) = {R_25:.4f} kΩ")
