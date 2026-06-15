@@ -1,0 +1,51 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
+
+x = np.array([0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000])
+y = np.array([0.01, 0.99, 1.98, 2.97, 3.95, 4.94, 5.93, 6.92, 7.92, 8.90, 9.89])
+#Steigung der Ursprungsgerade
+m = np.sum(x * y) / np.sum(x**2)
+
+# Unherheit der Steigung
+y_fit_points = m * x
+residuals = y - y_fit_points
+
+sigma_m = np.sqrt(
+    np.sum(residuals**2) /
+    ((len(x) - 1) * np.sum(x**2))
+)
+
+x_fit = np.linspace(min(x), max(x), 100)
+y_fit = m * x_fit
+fig, ax = plt.subplots(figsize=(8, 5))
+
+# Messunsicherheiten
+dU = 0.009 * y + 4 * 0.01
+dx = np.ones_like(x) * 1
+
+ax.plot(x_fit, y_fit, color="red",
+        label=f Ursprungsgerade: m = ({m:.6f} \pm {sigma_m:.6f})")
+
+ax.errorbar(
+    x, y,
+    xerr=dx,
+    yerr=dU,
+    fmt='o',
+    color='black',
+    ecolor='gray',
+    capsize=4,
+    label='Messwerte mit Unsicherheit'
+)
+
+ax.set_title("Abhaengigkeit der Spannung von Laenge", fontsize=14)
+ax.set_xlabel("Skalenwerte", fontsize=12)
+ax.set_ylabel("U / V", fontsize=12)
+ax.set_xlim(0, 1010)
+ax.set_ylim(0, 10.1)
+
+ax.xaxis.set_major_locator(MultipleLocator(100))
+ax.yaxis.set_major_locator(MultipleLocator(1))
+ax.tick_params(axis="both", labelsize=11)
+ax.grid(True, linestyle="--", linewidth=0.7, alpha=0.6)
+ax.legend(fontsize=10, loc="best", frameon=True)
