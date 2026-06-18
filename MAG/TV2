@@ -1,0 +1,171 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
+# erster Wert wurde weggelassen: sin(alpha)=0, phi=0
+
+x = np.array([0.174, 0.342, 0.500, 0.643, 0.766, 0.866, 0.940, 0.985, 1.000])
+y = np.array([-20, -37, -51, -65, -77, -85, -93, -99, -101], dtype=float)
+
+# Fehler der y-Werte: phi
+y_err = np.full_like(y, 2.5)
+
+# Lineare Ausgleichsgerade: y = m*x + t
+m, t = np.polyfit(x, y, 1)
+
+# Gleichung der optimalen Gerade fuer die Legende
+if t >= 0:
+    gleichung_opt = f"y = {m:.2f}x + {t:.2f}"
+else:
+    gleichung_opt = f"y = {m:.2f}x - {abs(t):.2f}"
+
+# X Bereiche
+# Fuer den Fehlerstreifen: nur im Messbereich
+x_links = min(x)
+x_rechts = max(x)
+x_streifen = np.linspace(x_links, x_rechts, 300)
+
+# Fuer die Geraden: ueber den ganzen sichtbaren Bereich
+x_gerade = np.linspace(0, 1.02, 300)
+
+# Werte der optimalen Gerade
+y_fit_streifen = m * x_streifen + t
+y_fit_gerade = m * x_gerade + t
+
+# FEHLERSTREIFEN
+w_links = 0.8
+w_rechts = 1.5
+
+# Optimale Gerade an den Randpunkten
+y_links = m * x_links + t
+y_rechts = m * x_rechts + t
+
+# Ober- und Unterkante des Fehlerstreifens an den Raendern
+y_links_oben = y_links + w_links
+y_links_unten = y_links - w_links
+
+y_rechts_oben = y_rechts + w_rechts
+y_rechts_unten = y_rechts - w_rechts
+
+# Fehlerstreifen ueber den Messbereich
+w_fit = w_links + (w_rechts - w_links) * (x_streifen - x_links) / (x_rechts - x_links)
+
+y_streifen_oben = y_fit_streifen + w_fit
+y_streifen_unten = y_fit_streifen - w_fit
+
+# GRENZGERDADEN
+# Diagonale 1: links oben nach rechts unten
+m_diag1 = (y_rechts_unten - y_links_oben) / (x_rechts - x_links)
+t_diag1 = y_links_oben - m_diag1 * x_links
+
+# Diagonale 2: links unten nach rechts oben
+m_diag2 = (y_rechts_oben - y_links_unten) / (x_rechts - x_links)
+t_diag2 = y_links_unten - m_diag2 * x_links
+
+# kleinere und groeßere Steigung bestimmen
+if m_diag1 < m_diag2:
+    m_min = m_diag1
+    t_min = t_diag1
+    m_max = m_diag2
+    t_max = t_diag2
+else:
+    m_min = m_diag2
+    t_min = t_diag2
+    m_max = m_diag1
+    t_max = t_diag1
+
+# Gleichungen der Grenzgeraden fuer die Legende
+if t_min >= 0:
+    gleichung_min = f"y = {m_min:.2f}x + {t_min:.2f}"
+else:
+    gleichung_min = f"y = {m_min:.2f}x - {abs(t_min):.2f}"
+
+if t_max >= 0:
+    gleichung_max = f"y = {m_max:.2f}x + {t_max:.2f}"
+else:
+    gleichung_max = f"y = {m_max:.2f}x - {abs(t_max):.2f}"
+
+# Unsicherheit der Steigung
+delta_m = (m_max - m_min) / 2
+
+# y-Werte der Grenzgeraden ueber den ganzen sichtbaren Bereich
+y_min = m_min * x_gerade + t_min
+y_max = m_max * x_gerade + t_max
+
+
+
+# PLOTTEN
+fig, ax = plt.subplots(figsize=(8, 5))
+
+# Messwerte mit y-Fehlerbalken
+ax.errorbar(
+    x,
+    y,
+    yerr=y_err,
+    fmt="o",
+    color="black",
+    ecolor="gray",
+    capsize=4,
+    markersize=5,
+    label="Messwerte mit Fehlerbalken"
+)
+
+# Fehlerstreifen nur im Messbereich
+ax.fill_between(
+    x_streifen,
+    y_streifen_unten,
+    y_streifen_oben,
+    color="gray",
+    alpha=0.25,
+    label="Fehlerstreifen"
+)
+
+# Optimale Gerade ueber den ganzen Bereich
+ax.plot(
+    x_gerade,
+    y_fit_gerade,
+    color="red",
+    linewidth=1,
+    label=f"Optimale Gerade: {gleichung_opt}"
+)
+
+# Grenzgerade m_min
+ax.plot(
+    x_gerade,
+    y_min,
+    color="blue",
+    linestyle="-",
+    linewidth=1,
+    label=f"Grenzgerade m_min: {gleichung_min}"
+)
+
+# Grenzgerade m_max
+ax.plot(
+    x_gerade,
+    y_max,
+    color="green",
+    linestyle="-",
+    linewidth=1,
+    label=f"Grenzgerade m_max: {gleichung_max}"
+)
+
+# Beschriftung
+ax.set_title(r"Torsionswinkel $\varphi$ in Abhängigkeit von $\sin(\alpha)$", fontsize=14)
+ax.set_xlabel(r"$\sin(\alpha)$", fontsize=12)
+ax.set_ylabel(r"$\varphi \,[^\circ]$", fontsize=12)
+
+# Achsengrenzen
+ax.set_xlim(0, 1.02)
+ax.set_ylim(-110, 0)
+
+# Skalierung
+ax.xaxis.set_major_locator(MultipleLocator(0.1))
+ax.yaxis.set_major_locator(MultipleLocator(10))
+
+ax.tick_params(axis="both", labelsize=11)
+ax.grid(True, linestyle="--", linewidth=0.7, alpha=0.6)
+
+# Legende
+ax.legend(fontsize=8, loc="best", frameon=True)
+
+plt.tight_layout()
+plt.show()
